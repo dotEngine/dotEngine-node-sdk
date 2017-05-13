@@ -1,26 +1,73 @@
+'use strict';
+
 /*
 
 dotEngine server SDK
-
 */
 
 
-var net = require('net');
+const net = require('net');
+const request = require('request');
 
+const dotEngineUrl = 'https://janus.dot.cc/api/';
+const tokenExpires = 3600*24;
 
+class DotEngine 
+{
+    constructor(appkey,appSecret)
+    {
+        this._appkey = appkey;
+        this._appSecret = appSecret;
+    }
+    get appKey()
+    {
+        return this._appkey;
+    }
+    get appSecret()
+    {
+        return this._appSecret;
+    }
+    createToken(options,callback)
+    {
+        let room = options.room;
+        let user = options.user;
+        let role = '';
+        if(options.role){
+            role = options.role;
+        }
+        let expires = tokenExpires;
+        if(options.expires){
+            expires = options.expires;
+        }
 
-var DotEngine = function (appKey,appSecret,env) {
+        let roptions = {
+            uri: dotEngineUrl + 'createToken',
+            method:'POST',
+            json: {
+                room:room,
+                user:user,
+                appkey:this._appkey,
+                expires:expires,
+                role:role
+            }
+        };
 
-    if (!(this instanceof DotEngine)) return new DotEngine(apiKey, apiSecret, env);
-
-    this.appKey = appKey;
-    this.appSecret = appSecret;
-
-};
-
-
-DotEngine.prototype.createToken = function(opts,callback){
-
-
-
+        request(roptions, (error,response,body) => {
+            if(!error && response.statusCode == 200){
+                let ret = JSON.parse(body);
+                if(ret.s > 10000){
+                    // error 
+                    callback(ret.e,null);
+                    return;
+                }
+                callback(null,ret.d.token);
+            } else {
+                callback(error, null);
+            }
+        });
+        
+    }
 }
+
+
+module.exports = DotEngine;
