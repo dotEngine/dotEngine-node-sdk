@@ -6,6 +6,7 @@
   "author": "notedit <notedit@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "jwt-simple": "^0.5.1",
     "request": "^2.81.0"
   }
 }
